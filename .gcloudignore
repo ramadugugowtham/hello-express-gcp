@@ -1,0 +1,18 @@
+# This file specifies files that are *not* uploaded to Google Cloud when
+# deploying or using other gcloud commands.
+# Lines starting with '#' are comments.
+
+.gcloudignore
+.git
+.gitignore
+
+node_modules/
+
+# Test files if you don't want them in the deployed image/source context
+# However, for Cloud Build to run tests, they might need to be present initially.
+# If tests are run in a separate build step before creating the final image,
+# then they can be ignored for the image itself.
+# __tests__/
+
+# Dockerfile is used by Cloud Build, so it should not be ignored here generally
+# Dockerfile 
