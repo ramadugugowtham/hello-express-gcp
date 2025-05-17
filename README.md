@@ -68,31 +68,64 @@ This project is a simple Express.js application designed to demonstrate a CI/CD 
 
 ## Deployment to Google Cloud
 
-1.  **Replace Placeholders in `cloudbuild.yaml`:**
-    Open `cloudbuild.yaml` and replace `[PROJECT_ID]`, `[SERVICE_NAME]`, and `[REGION]` with your actual Google Cloud Project ID, desired service name, and region.
+1.  **Ensure Placeholders in `cloudbuild.yaml` are Updated:**
+    Before proceeding, make sure you have replaced `[PROJECT_ID]`, `[SERVICE_NAME]`, and `[REGION]` in `cloudbuild.yaml` with your actual Google Cloud Project ID, desired service name (e.g., `hello-express-service`), and GCP region (e.g., `asia-south1`). If you plan to use Artifact Registry, ensure the image paths and `[REPOSITORY_NAME]` are also correctly configured.
 
-    - `[PROJECT_ID]`: Your Google Cloud project ID.
-    - `[SERVICE_NAME]`: A name for your Cloud Run service (e.g., `hello-express-demo`).
-    - `[REGION]`: The GCP region where your service will be deployed (e.g., `us-central1`).
-
-    If you are using Artifact Registry instead of Google Container Registry (GCR), update the image paths accordingly:
-    `[REGION]-docker.pkg.dev/[PROJECT_ID]/[ARTIFACT_REGISTRY_REPOSITORY_NAME]/[SERVICE_NAME]:$COMMIT_SHA`
-
-2.  **Ensure your Google Cloud Project is set:**
-
+2.  **Ensure your Google Cloud Project is set locally (for manual submission):**
     ```bash
-    gcloud config set project [PROJECT_ID]
+    gcloud config set project <YOUR_PROJECT_ID>
     ```
 
-3.  **Submit the build to Cloud Build:**
-    This command will trigger Cloud Build to build your Docker image, run tests (as defined in `cloudbuild.yaml`), push the image to the registry, and deploy to Cloud Run.
+There are two main ways to deploy using Cloud Build:
+
+### Option A: Manual Build Submission
+
+This method is useful for direct testing of your `cloudbuild.yaml` configuration.
+
+1.  **Submit the build to Cloud Build:**
+    From the root directory of your project, run:
 
     ```bash
     gcloud builds submit --config cloudbuild.yaml .
     ```
 
+    This command uploads your code, then Cloud Build executes the steps in `cloudbuild.yaml` (tests, Docker build, push to registry, deploy to Cloud Run).
+
+2.  **Access your deployed service:**
+    After successful deployment, Cloud Build provides the service URL. You can also find it in the Google Cloud Console under Cloud Run.
+
+### Option B: Automated CI/CD with GitHub and Cloud Build Triggers
+
+This is the recommended approach for continuous integration and deployment. Cloud Build will automatically build and deploy your application whenever changes are pushed to your connected GitHub repository.
+
+1.  **Push your code to a GitHub repository:**
+    Ensure your project, including `cloudbuild.yaml`, `Dockerfile`, and all source code, is pushed to a GitHub repository.
+
+2.  **Set up a Cloud Build Trigger in GCP:**
+
+    - Navigate to **Cloud Build > Triggers** in the Google Cloud Console.
+    - Click **"Create trigger"**.
+    - **Name** your trigger (e.g., `deploy-on-push-main`).
+    - **Event:** Select **"Push to a branch"**.
+    - **Source > Repository:** Click **"Connect new repository"**. Follow the prompts to authenticate and select your GitHub account and the repository for this project.
+    - **Source > Branch:** Specify the branch that should trigger builds (e.g., `^main$` for the main branch).
+    - **Configuration > Type:** Select **"Cloud Build configuration file (yaml or json)"**.
+    - **Configuration > Location:** Select **"Repository"** and ensure the **"Cloud Build configuration file location"** is set to `/cloudbuild.yaml` (or just `cloudbuild.yaml`).
+    - Click **"Create"**.
+
+3.  **Test the Trigger:**
+    Push a commit to the branch you configured (e.g., `main`) in your GitHub repository.
+
+    ```bash
+    git add .
+    git commit -m "Test Cloud Build trigger"
+    git push origin main
+    ```
+
+    Go to **Cloud Build > History** in the GCP Console. You should see a new build automatically started.
+
 4.  **Access your deployed service:**
-    After the build and deployment are successful, Cloud Build will output the URL of your Cloud Run service. You can also find it in the Google Cloud Console under Cloud Run.
+    Once the triggered build completes successfully, your application will be deployed or updated on Cloud Run. You can find the service URL in the build logs or in the Cloud Run section of the console.
 
 ## Best Practices Demonstrated
 
